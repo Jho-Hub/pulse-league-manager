@@ -24,8 +24,49 @@ button{border:0;border-radius:10px;padding:10px 14px;background:var(--blue);colo
 @media(max-width:700px){header{padding:15px 16px}.brandmark{width:38px;height:38px}.brand h1,header h1{font-size:21px}.grid,.row,.row2,.gameCards{grid-template-columns:1fr}main{padding:16px}nav{top:68px;padding:8px 10px}.hero h2{font-size:26px}.titlebar h2{font-size:25px}}
 </style>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+
+<style id="pulse-mobile-enhancements">
+/* Pulse mobile-first enhancements */
+@media (max-width: 768px){
+  html,body{overflow-x:hidden}
+  body{font-size:15px}
+  .container,.wrap,.content,.main,.page,.app-content{width:100%;max-width:none;padding-left:12px!important;padding-right:12px!important}
+  header,.topbar,.navbar,.nav,.sidebar{position:sticky;top:0;z-index:50}
+  nav,.nav,.tabs{overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  nav::-webkit-scrollbar,.nav::-webkit-scrollbar,.tabs::-webkit-scrollbar{display:none}
+  nav a,.nav a,.tabs button,.tabs a{padding:12px 14px;min-height:44px;display:inline-flex;align-items:center}
+  button,input,select,textarea{font-size:16px!important}
+  button{min-height:44px}
+  input,select,textarea{min-height:44px;width:100%;box-sizing:border-box}
+  .grid,.cards,.stats,.kpis,.dashboard-grid{grid-template-columns:1fr!important;gap:12px!important}
+  .card,.panel,.modal,.stat-card{border-radius:16px}
+  table{display:block;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:nowrap}
+  th,td{padding:10px 12px}
+  .modal{width:calc(100vw - 24px)!important;max-width:none!important;margin:12px!important}
+  .modal-content{max-height:88vh;overflow-y:auto}
+  .form-grid,.fields,.row{grid-template-columns:1fr!important;display:grid!important;gap:12px!important}
+  .actions,.modal-actions{display:grid!important;grid-template-columns:1fr 1fr;gap:10px!important}
+  .actions button,.modal-actions button{width:100%}
+  .hero h1{font-size:28px!important;line-height:1.1}
+  .hero p{font-size:14px}
+  .stat-value{font-size:28px!important}
+  .game-card{padding:14px!important}
+}
+@media (max-width:480px){
+  .actions,.modal-actions{grid-template-columns:1fr!important}
+  h1{font-size:24px!important} h2{font-size:20px!important}
+  .brand,.logo{font-size:20px!important}
+  .page-header{display:flex;flex-direction:column;gap:10px;align-items:stretch!important}
+  .page-header button{width:100%}
+}
+/* Install-app helper */
+#installAppBtn{display:none}
+@media (max-width:768px){#installAppBtn{display:inline-flex}}
+</style>
+
 </head>
 <body>
+<button id="installAppBtn" type="button" style="position:fixed;right:12px;bottom:12px;z-index:9999;border:0;border-radius:999px;padding:12px 16px;font-weight:700;box-shadow:0 6px 20px rgba(0,0,0,.2)">Add to Home Screen</button>
 <header><div class="brand"><div class="brandmark">P</div><div><h1>Pulse League Manager</h1><div id="userSub" class="sub">Online</div></div></div><button id="logout" class="secondary" style="display:none">Sign out</button></header>
 <div id="login"><div class="card"><h2>League Staff Login</h2><p class="muted">Sign in to access the shared league database.</p><div class="field"><label>Email</label><input id="email" type="email" autocomplete="email"></div><br><div class="field"><label>Password</label><input id="password" type="password" autocomplete="current-password"></div><br><button id="signin">Sign in</button><button id="signup" class="secondary" style="margin-left:8px">Create account</button><button id="forgot" class="secondary" style="margin-left:8px">Forgot password?</button><div id="authmsg" class="error"></div></div></div>
 <div id="app" style="display:none"><nav id="nav"></nav><main>
@@ -177,6 +218,15 @@ $('signup').onclick=async()=>{ $('authmsg').textContent='';let r=await client.au
 $('forgot').onclick=async()=>{const e=$('email').value.trim();if(!e)return $('authmsg').textContent='Enter your email first.';let r=await client.auth.resetPasswordForEmail(e,{redirectTo:location.origin});if(r.error)$('authmsg').textContent=r.error.message;else $('authmsg').innerHTML='<span class="successmsg">Password reset email sent.</span>'};
 $('logout').onclick=async()=>{await client.auth.signOut();auth()};
 document.addEventListener('submit',e=>{if(e.target&&e.target.id==='playerForm'){savePlayer(e)}});window.addEventListener('error',e=>console.error('Pulse League Manager error:',e.error||e.message));window.addEventListener('unhandledrejection',e=>console.error('Pulse League Manager promise error:',e.reason));client.auth.onAuthStateChange((event)=>{if(event==='SIGNED_OUT'||event==='SIGNED_IN')setTimeout(auth,0)});auth();
-</script><script>window.addEventListener('error',function(e){console.error('Pulse League Manager error:',e.error||e.message)});</script></body></html>
+</script><script>window.addEventListener('error',function(e){console.error('Pulse League Manager error:',e.error||e.message)});</script><script id="pulse-pwa-helper">
+(function(){
+ let deferredPrompt;
+ const btn=document.getElementById('installAppBtn');
+ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;if(btn)btn.style.display='inline-flex';});
+ if(btn) btn.addEventListener('click',async()=>{ if(!deferredPrompt) return; deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt=null; btn.style.display='none'; });
+ window.addEventListener('appinstalled',()=>{if(btn)btn.style.display='none';});
+})();
+</script>
+</body></html>
 
 <script>document.addEventListener('submit',function(ev){const f=ev.target;if(!f||!f.closest('#modal'))return;const id=f.id; if(['playerForm','teamForm','gameForm','paymentForm','attendanceForm','bracketForm'].includes(id)){ev.preventDefault(); if(id==='playerForm')savePlayer(ev); else if(id==='teamForm')saveTeamDirect(); else if(id==='gameForm')saveGameDirect(f.dataset.gameId||''); else if(id==='paymentForm')savePayment(ev); else if(id==='attendanceForm')saveAttendance(ev); else if(id==='bracketForm')saveBracket(ev,f.dataset.bracketId||'');}},true);</script>
